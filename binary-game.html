@@ -1,0 +1,376 @@
+<meta name="viewport" content="width=device-width,height=device-height initial-scale=1, maximum-scale=1, user-scalable=no" >
+<meta charset="utf-8">
+<html>
+    <title>  </title>
+        <style>
+                /* This is css-code which styles the html page.  */
+                html {
+                  font-family: sans-serif;
+                }
+                body {
+                  width: 330px;
+                  max-width: 330px;
+                  /* OBS: I set this in absolute values
+                  with respect to the chosen table width. */
+                  min-width: 0px;
+                  margin: 0 auto;
+                }
+                .lastResult {
+                  color: white;
+                  padding: 3px;
+                }
+
+                /* div{ 
+                height: 80px;
+                overflow-y: scroll;
+                } */
+
+              </style>
+          
+    <body>
+        <br>
+        <center> <h1 id = "questiontext"> Base 2 test</h1> </center>
+        <div class="firstdiv">
+                <p id="extratext">
+                    <br>
+                </p>
+        </div>
+        <div id="maindiv">
+        </div>
+        <p><br></p>
+        <div id="lastdiv">
+        </div>
+            
+        <script>
+        // Set up some gameplay-variables. 
+        var allAnswered = false;            
+        var numRounds = 6; var currentRound = 0;
+        var problemArray = [];
+        var submittedAnswers = [];
+
+        SubmitTableInfo = {"NumRows": 1, "NumCols": 1, 
+        "TableName": "SubmitTable",
+        "Labels":["Submit"],
+        "DivId":"lastdiv"
+        };
+
+        InputTableInfo = {"NumRows": 1, "NumCols": 4, 
+        "TableName": "InputTable",
+        "Labels":[
+        "0", "0", "0", "0"], 
+        "DivId":"maindiv"
+        };
+
+        var question_text_append_part = "";
+
+
+
+        function generateProblems(numProblems){
+            // OBS: It must hold that numProblems <= parseInt(CELLTEXT, 2), 
+            // which is 15 in this case.
+            // Create an array of randomly selected integers.
+            problemArray = Array.from({length: numProblems}, () => Math.floor(Math.random() * 15));
+            return problemArray;
+        }
+
+        questionSection = document.getElementById("questiontext");
+
+            function tableCreate(tableInfo){
+
+                // Lazy exception handling in the conditionals below.
+                NumCells = tableInfo.NumRows * tableInfo.NumCols;
+                if(NumCells == tableInfo.Labels.length){
+                    var body = document.body;
+
+                    var maindiv = document.getElementById(tableInfo.DivId);
+
+                    tbl  = document.createElement('table');
+                    tbl.id = tableInfo.TableName;
+
+                    // 100 px per row.
+                    tbl.style.height  = '100px';
+                    tbl.style.width  = '350px';
+
+                    tbl.style.border = '1px solid black';
+
+                    RowPos = 0;
+                for(var i = 1; i <= tableInfo.NumRows; i++){                     
+                    var tr = tbl.insertRow();
+                    for(var j = 1; j <= tableInfo.NumCols; j++){
+                            var td = tr.insertCell();
+
+                            // If you want to have a raw text for each cell, uncomment below row.
+                            // td.appendChild(document.createTextNode(tableInfo.Labels[RowPos + j - 1]));
+                            td.style.border = '1px solid black';
+                    }
+                    RowPos = RowPos + tableInfo.NumCols;
+                }
+                maindiv.appendChild(tbl);
+                // body.appendChild(tbl);
+
+                }else{
+                    alert("The number of labels do not correspond to the " +
+                    "number of cells.")
+                }
+            }
+
+        function numericalPressed(btnId){
+
+            button_pressed = document.getElementById(btnId);
+            button_pressed.innerText = (Number(button_pressed.innerText) + 1) % 2;
+
+            update_question_text(currentRound-1);
+        }
+
+        function update_question_text(currentRound){
+            question_text_append_part = "";
+            let append_array = [];
+            for(let i = 3; i >= 0; i--){
+                let in_txt = document.getElementById("base_" + i).innerText;
+                let in_val = Number(in_txt);
+                append_array.push(String(in_val * (2 ** i)));
+
+            }
+            question_text_append_part = append_array.join(" + ")
+
+            update_string = problemArray[currentRound] + " = " + question_text_append_part;
+            console.log(update_string);
+            document.getElementById("questiontext").innerText = update_string;
+            // console.log(question_text_append_part);
+        }
+
+
+        function buttonsCreate(tableInfo){
+
+            tbl = document.getElementById(tableInfo.TableName);
+            NumCells = tableInfo.NumRows * tableInfo.NumCols;
+
+            RowPos = 0;
+            for(let i = 0; i <= tableInfo.NumRows - 1; i++){
+                let tr = tbl.getElementsByTagName("tr")[i];
+                for(let j = 0; j <= tableInfo.NumCols - 1; j++){
+                    let td = tr.getElementsByTagName("td")[j];
+                    
+                    let btn = document.createElement("button");
+                    let t = document.createTextNode(tableInfo.Labels[RowPos + j]);
+                    btn.appendChild(t);
+                    btn.style.width = "100%";
+                    btn.style.height = "100%";
+                    btn.style.fontSize = "40px";
+
+                    btn.style.background = "black";
+                    btn.style.color = "white";
+
+                    // let btnId = tableInfo.TableName + "_Cell_" + i + "_" + j;
+                    let btnId = "base_" + Number(3-j);
+                    btn.id = btnId;
+
+                
+                    /*
+                    Add a event listeners to the buttons.
+                    */
+                    btn.addEventListener('click', () => {numericalPressed(btn.id)});
+
+
+                    /* Add the button to the document. */
+                    td.appendChild(btn); 
+                }
+                // Update the row position.
+                RowPos = RowPos + tableInfo.NumCols;
+
+            }
+        }
+
+        function createEmptyRows(numRows){
+            var emptyParagraph = document.createElement("p");
+            for(var i = 1; i <= numRows; i++){
+                var lineBreak = document.createElement("br");
+                emptyParagraph.appendChild(lineBreak);
+            }
+            document.body.appendChild(emptyParagraph);
+        }
+
+        function numEqualEntries(a, b){
+            let equalEntries = 0;
+            for(var i = 0; i < a.length; i++){
+                if(a[i] === b[i]){
+                    equalEntries += 1;
+                }
+            }
+            return equalEntries;
+        }
+
+        function viewQuestion(currentRound){
+            inputTable = document.getElementById("InputTable");
+
+                // Reset the submitted values to zero.
+                for(let i= 0; i <= (inputTable.rows[0].childNodes.length - 1); i++){
+                    let btn = document.getElementById("base_" + i);
+                    btn.innerText = "0";
+
+                    // Set the text size for the button text.
+                    btn.style.fontSize = "40px";
+                }
+                update_question_text(currentRound);
+        }
+
+        function submitPressed(){
+
+
+            // Game mechanics here.
+            if(currentRound == 0){
+                // Generate the buttons.
+                maindiv.innerHTML = "";
+                maindiv.style.overflowY = "";
+                maindiv.style.width = "";
+                maindiv.style.height = "";
+
+                tableCreate(InputTableInfo);
+                buttonsCreate(InputTableInfo);
+
+                // Generate a new problem array, view it.
+                problemArray = generateProblems(numRounds);
+                submittedAnswers = [];
+
+                // playGame = true;
+                btn = document.getElementById("Button_submit");
+                btn.innerText = "Next problem.";
+
+                // Set the text size for the button text.
+                btn.style.fontSize = "40px";
+
+                viewQuestion(currentRound);
+                currentRound += 1;
+            }
+            else if(0 < currentRound && currentRound < problemArray.length){
+                // Update answer-array.
+                inputTable = document.getElementById("InputTable");
+                var currentAnswer = inputTable.innerText.replace(/\s/g, '');
+                // Append the submitted answer to the corresponding  array.
+                submittedAnswers.push(currentAnswer);
+
+                console.log(submittedAnswers)
+                console.log(problemArray)
+                console.log(currentRound)
+                // View the next question.
+                viewQuestion(currentRound); // FIX THIS!!!
+                currentRound += 1;
+
+            }
+            else {
+                // Update answer-array.
+                inputTable = document.getElementById("InputTable");
+                var currentAnswer = inputTable.innerText.replace(/\s/g, '');
+                // Append the submitted answer to the corresponding  array.
+                submittedAnswers.push(currentAnswer);
+
+                // Reset the round counter.
+                currentRound = 0;
+                btn = document.getElementById("Button_submit");
+                btn.innerText = "Play again!";
+                // View score.
+                // Convert answers from binary to decimal form store in array.
+                submittedAnswersDecimal = [];
+                submittedAnswers.forEach(element => submittedAnswersDecimal.push(parseInt(element,2)))
+
+                questionSection = document.getElementById("questiontext");
+                questionSection.innerText = "Correct: " + 
+                numEqualEntries(submittedAnswersDecimal, problemArray) + "/" +  
+                problemArray.length;
+
+                
+                // View list of questions and correct answers.
+                viewCompleteResults(submittedAnswers, problemArray)
+            }
+
+        }
+
+        function createSubmitButton(tableInfo){
+            tbl = document.getElementById(tableInfo.TableName);
+            var tr = tbl.getElementsByTagName("tr")[0]
+            var td = tr.getElementsByTagName("td")[0];
+
+            var btn = document.createElement("button");
+            var t = document.createTextNode("Start");
+
+            btn.id = "Button_submit";
+            // Set the text size for the button text.
+            btn.style.fontSize = "40px";
+
+
+            btn.appendChild(t);
+            btn.style.width = "100%";
+            btn.style.height = "100%";
+
+            btn.style.background = "black";
+            btn.style.color = "white";
+            
+            btn.addEventListener('click', function(){
+                submitPressed();
+                });
+            td.appendChild(btn); 
+        }
+
+
+        function viewCompleteResults(submittedAnswers, problemArray){
+            // Delete the contents of 'maindiv', replace with the following.
+            maindiv.innerHTML = "";
+
+            // Generate a table with correct cells marked with white background,
+            // and incorrect cells with black background.
+            tbl  = document.createElement('table');
+            tbl.id = 'ResultsTable';
+
+            // Set 100% to adapt to the div-section.
+            tbl.style.height  = '100%';
+            tbl.style.width  = '100%';
+
+            tbl.style.border = '1px solid black';
+
+            for(var i = 0; i <= problemArray.length-1; i++){
+                var tr = tbl.insertRow();
+                tr.style.height = '100%';
+                tr.style.width = '100%';
+
+                tr.style.fontSize = "40px";
+
+                var tdProblem = tr.insertCell();                
+                tdProblem.innerText = problemArray[i];
+
+                var tdAnswer = tr.insertCell();
+                tdAnswer.innerText = submittedAnswers[i];
+
+                var isCorr = tr.insertCell();
+
+                // Create a row with <problem, answer>.
+                    tdProblem.style.color = 'white';
+                    tdProblem.style.background = 'black';
+                    tdAnswer.style.color = 'white';
+                    tdAnswer.style.background = 'black';               
+                    isCorr.style.background = 'black';
+
+                if(problemArray[i] == submittedAnswersDecimal[i]){
+                    isCorr.innerText = "+";
+                    isCorr.style.color = 'White';
+                }
+                else{
+                    isCorr.innerText = "-";
+                    isCorr.style.color = 'Red';
+                }
+                tdProblem.style.width = '34%';
+                tdAnswer.style.width = '33%';
+                isCorr.style.width = '33%';
+            }
+            maindiv.appendChild(tbl);
+            maindiv.style.overflowY = "scroll";           
+            maindiv.style.width = "350px";
+            maindiv.style.height = "100px";
+        }
+
+
+        tableCreate(SubmitTableInfo);
+        createSubmitButton(SubmitTableInfo);
+
+        </script>
+    </body>
+</html>
